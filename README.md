@@ -61,6 +61,6 @@ O projeto utiliza GitHub Actions para validar automaticamente cada alteração. 
 
     Versão: 1.0.0
 
-    Autor: SEU NOME COMPLETO
+    Autor: Gabriel Batista Gomes
 
     Licença: MIT
