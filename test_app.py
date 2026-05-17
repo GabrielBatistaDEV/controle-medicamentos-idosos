@@ -14,7 +14,6 @@ def test_lista_comeca_vazia():
     lista = []
     assert len(lista) == 0
 
-# --- NOVO: Teste de Integração com a API mockada ---
 def test_buscar_endereco_por_cep_sucesso():
     """
     Valida se a função consegue interpretar corretamente o retorno de sucesso da API.
@@ -27,7 +26,6 @@ def test_buscar_endereco_por_cep_sucesso():
         "street": "Praça da Sé"
     }
 
-    # Intercepta a requisição HTTP e injeta o mock simulando sucesso (Status 200)
     with patch('app.requests.get') as mock_get:
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = mock_resposta_api
