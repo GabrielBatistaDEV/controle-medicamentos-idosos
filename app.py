@@ -161,6 +161,44 @@ def adicionar_medicamento():
         "mensagem": "Medicamento cadastrado com sucesso"
 
     })
+    # REMOVER MEDICAMENTO
+
+@app.route("/medicamentos/<int:id>", methods=["DELETE"])
+def remover_medicamento(id):
+
+    conexao = conectar_banco()
+
+    if conexao is None:
+        return jsonify({
+            "erro": "Banco indisponível"
+        }), 500
+
+    cursor = conexao.cursor()
+
+    cursor.execute(
+        """
+        DELETE FROM medicamentos
+        WHERE id = %s
+        RETURNING id;
+        """,
+        (id,)
+    )
+
+    removido = cursor.fetchone()
+
+    conexao.commit()
+
+    cursor.close()
+    conexao.close()
+
+    if removido is None:
+        return jsonify({
+            "erro": "Medicamento não encontrado"
+        }), 404
+
+    return jsonify({
+        "mensagem": "Medicamento removido com sucesso"
+    }), 200
 
 # EXECUÇÃO LOCAL
 
