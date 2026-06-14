@@ -1,17 +1,24 @@
+import os
+from flask import Flask, jsonify, request
 import psycopg2
 import requests
+
+app = Flask(__name__)
+
+# CONFIGURAÇÃO DO BANCO
 
 DB_HOST = "db.tganllgynuakgqpsszpf.supabase.co"
 DB_PORT = "5432"
 DB_NAME = "postgres"
 DB_USER = "postgres"
-DB_PASSWORD = "SUA_SENHA_AQUI"  # <-- Lembre de colocar sua senha real aqui
 
+DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 def conectar_banco():
     """
-    Estabelece a conexão com o banco de dados PostgreSQL no Supabase.
+    Conecta ao banco PostgreSQL do Supabase.
     """
+
     try:
         conexao = psycopg2.connect(
             host=DB_HOST,
@@ -20,100 +27,146 @@ def conectar_banco():
             user=DB_USER,
             password=DB_PASSWORD
         )
+
         return conexao
-    except psycopg2.DatabaseError as erro:
-        print(f"⚠️ Erro ao conectar ao banco de dados: {erro}")
+
+    except Exception as erro:
+        print(f"Erro ao conectar no banco: {erro}")
         return None
+        
+# ROTA INICIAL
 
+@app.route("/")
+def inicio():
 
-def buscar_endereco_por_cep(cep):
-    """
-    Consome a BrasilAPI para buscar dados de endereço de forma gratuita.
-    Retorna um dicionário com os dados ou uma mensagem de erro.
-    """
+    return jsonify({
+        "projeto": "Cuidado Amigo",
+        "status": "online",
+        "mensagem": "API funcionando corretamente"
+    })
+
+# BRASIL API - CEP
+
+@app.route("/cep/<cep>")
+def buscar_cep(cep):
+
     cep_limpo = ''.join(filter(str.isdigit, cep))
-
     if len(cep_limpo) != 8:
-        return {
-            "erro": "CEP inválido. Deve conter 8 dígitos.",
-            "sucesso": False
-        }
+        return jsonify({
+            "erro": "CEP inválido"
+        })
+
 
     url = f"https://brasilapi.com.br/api/cep/v1/{cep_limpo}"
-
+    
     try:
-        response = requests.get(url, timeout=5)
-        if response.status_code == 200:
-            dados = response.json()
-            return {
-                "sucesso": True,
-                "rua": dados.get("street"),
-                "bairro": dados.get("neighborhood"),
-                "cidade": dados.get("city"),
-                "estado": dados.get("state")
-            }
-        else:
-            return {
-                "erro": "CEP não localizado na base de dados.",
-                "sucesso": False
-            }
-    except requests.exceptions.RequestException:
-        return {
-            "erro": "Falha de conexão com o serviço de CEP.",
-            "sucesso": False
-        }
 
+        resposta = requests.get(
+            url,
+            timeout=5
+        )
 
-def adicionar_medicamento(lista, nome, horario):
+        return jsonify(
+            resposta.json()
+        )
+
+    except Exception:
+        return jsonify({
+            "erro": "Falha ao consultar CEP"
+        })
+
+# LISTAR MEDICAMENTOS
+
+@app.route("/medicamentos", methods=["GET"])
+def listar_medicamentos():
+    conexao = conectar_banco()
+    if conexao is None:
+        return jsonify({
+            "erro": "Banco indisponível"
+        })
+
+    cursor = conexao.cursor()
+
+    cursor.execute(
+        """
+        SELECT id, nome, horario
+        FROM medicamentos
+        ORDER BY id;
+        """
+    )
+
+    medicamentos = cursor.fetchall()
+
+    cursor.close()
+    conexao.close()
+
+    lista = []
+
+    for medicamento in medicamentos:
+        lista.append({
+            "id": medicamento[0],
+            "nome": medicamento[1],
+            "horario": medicamento[2]
+        })
+
+    return jsonify(lista)
+
+# CADASTRAR MEDICAMENTO
+
+@app.route("/medicamentos", methods=["POST"])
+def adicionar_medicamento():
+    dados = request.json
+    nome = dados.get("nome")
+    horario = dados.get("horario")
+
     if not nome or not horario:
-        return False
-    lista.append({"nome": nome, "horario": horario})
-    return True
+        return jsonify({
+            "erro": "Nome e horário são obrigatórios"
+        }), 400
+
+    conexao = conectar_banco()
+    
+    if conexao is None:
+        return jsonify({
+            "erro": "Banco indisponível"
+        })
+
+    cursor = conexao.cursor()
+    cursor.execute(
+
+        """
+        INSERT INTO medicamentos(nome, horario)
+        VALUES(%s,%s);
+        """,
+
+        (
+            nome,
+            horario
+        )
+
+    )
 
 
-def listar_medicamentos(lista):
-    return lista
+
+    conexao.commit()
 
 
-def menu():
-    medicamentos = []
+    cursor.close()
+    conexao.close()
 
-    print("       CUIDADO AMIGO - v1.1.0            ")
 
-    cep = input("Para iniciar, digite seu CEP (ou Enter para pular): ")
-    if cep:
-        info_cep = buscar_endereco_por_cep(cep)
-        if info_cep.get("sucesso"):
-            print(
-                f"\n📍 Localidade confirmada: {info_cep['rua']}, "
-                f"{info_cep['bairro']} - {info_cep['cidade']}/"
-                f"{info_cep['estado']}"
-            )
-        else:
-            msg = info_cep.get('erro')
-            print(f"\n⚠️ Não foi possível validar o CEP: {msg}")
 
-    while True:
-        print("\n--- Controle de Medicamentos ---")
-        print("1. Adicionar Remédio")
-        print("2. Listar Todos")
-        print("3. Sair")
-        opcao = input("Escolha: ")
+    return jsonify({
 
-        if opcao == "1":
-            nome = input("Nome do remédio: ")
-            hora = input("Horário (HH:MM): ")
-            adicionar_medicamento(medicamentos, nome, hora)
-        elif opcao == "2":
-            lista = listar_medicamentos(medicamentos)
-            if not lista:
-                print("Nenhum remédio cadastrado ainda.")
-            for m in lista:
-                print(f"Remédio: {m['nome']} - Hora: {m['horario']}")
-        elif opcao == "3":
-            print("Saindo do sistema... Até logo!")
-            break
+        "mensagem": "Medicamento cadastrado com sucesso"
 
+    })
+
+# EXECUÇÃO LOCAL
 
 if __name__ == "__main__":
-    menu()
+
+    app.run(
+        host="0.0.0.0",
+        port=5000
+    )
