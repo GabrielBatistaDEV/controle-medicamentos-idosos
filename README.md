@@ -70,3 +70,11 @@ O projeto utiliza GitHub Actions para validar automaticamente cada alteração. 
     Autores: Gabriel Batista Gomes, Leonardo Ali Yousef
 
     Licença: MIT
+
+    ---
+
+## Integrantes
+- Beatriz Saboia
+
+## Atualização realizada
+- Atualização da documentação do projeto para entrega final.
