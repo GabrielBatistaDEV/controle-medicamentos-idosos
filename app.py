@@ -2,6 +2,7 @@ import os
 from flask import Flask, jsonify, request
 import psycopg2
 import requests
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -120,9 +121,18 @@ def adicionar_medicamento():
     horario = dados.get("horario")
 
     if not nome or not horario:
-        return jsonify({
-            "erro": "Nome e horário são obrigatórios"
-        }), 400
+    return jsonify({
+        "erro": "Nome e horário são obrigatórios"
+    }), 400
+
+try:
+    datetime.strptime(horario, "%H:%M")
+except ValueError:
+    return jsonify({
+        "erro": "Horário deve estar no formato HH:MM"
+    }), 400
+
+conexao = conectar_banco()
 
     conexao = conectar_banco()
     
