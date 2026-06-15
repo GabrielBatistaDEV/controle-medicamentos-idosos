@@ -1,26 +1,86 @@
-from unittest.mock import patch
-from app import adicionar_medicamento, buscar_endereco_por_cep
+import pytest
+from unittest.mock import patch, MagicMock
+from app import app, buscar_cep
 
 
-def test_adicionar_medicamento_sucesso():
-    lista = []
-    assert adicionar_medicamento(lista, "Dipirona", "08:00") is True
-    assert len(lista) == 1
-
-
-def test_adicionar_medicamento_vazio():
-    lista = []
-    assert adicionar_medicamento(lista, "", "") is False
-
-
-def test_lista_comeca_vazia():
-    lista = []
-    assert len(lista) == 0
-
-
-def test_buscar_endereco_por_cep_sucesso():
+@pytest.fixture
+def client():
     """
-    Valida se a função consegue interpretar corretamente o retorno de sucesso.
+    Configura o cliente de testes do Flask.
+    """
+    app.config["TESTING"] = True
+    with app.test_client() as client:
+        yield client
+
+
+# === TESTES DE MEDICAMENTOS (ROTAS FLASK) ===
+
+@patch("app.conectar_banco")
+def test_adicionar_medicamento_sucesso(mock_conectar, client):
+    """
+    Valida se a rota POST responde com sucesso e traz a nova propriedade 'tomado'.
+    """
+    # Mock do banco de dados para não mexer no banco real durante o teste
+    mock_conexao = MagicMock()
+    mock_conectar.return_value = mock_conexao
+
+    dados_envio = {"nome": "Dipirona", "horario": "08:00"}
+    
+    resposta = client.post("/medicamentos", json=dados_envio)
+    dados_resposta = resposta.get_json()
+
+    assert resposta.status_code == 201
+    assert dados_resposta["mensagem"] == "Medicamento cadastrado com sucesso"
+    
+    # Valida se a sua NOVA funcionalidade está vindo no retorno do cadastro
+    assert dados_resposta["medicamento"]["nome"] == "Dipirona"
+    assert dados_resposta["medicamento"]["tomado"] is False
+
+
+def test_adicionar_medicamento_vazio(client):
+    """
+    Valida se a API impede o cadastro de campos vazios (Erro 400).
+    """
+    dados_invalidos = {"nome": "", "horario": ""}
+    
+    resposta = client.post("/medicamentos", json=dados_invalidos)
+    dados_resposta = resposta.get_json()
+
+    assert resposta.status_code == 400
+    assert "erro" in dados_resposta
+
+
+@patch("app.conectar_banco")
+def test_listar_medicamentos_inclui_status_tomado(mock_conectar, client):
+    """
+    Valida se a rota GET retorna a lista e se injeta corretamente 
+    o campo 'tomado' como False para o controle do idoso.
+    """
+    # Simula o retorno do banco de dados: (id, nome, horario)
+    mock_cursor = MagicMock()
+    mock_cursor.fetchall.return_value = [(1, "Dipirona", "08:00")]
+    
+    mock_conexao = MagicMock()
+    mock_conexao.cursor.return_value = mock_cursor
+    mock_conectar.return_value = mock_conexao
+
+    resposta = client.get("/medicamentos")
+    dados_resposta = resposta.get_json()
+
+    assert resposta.status_code == 200
+    assert len(dados_resposta) == 1
+    assert dados_resposta[0]["nome"] == "Dipirona"
+    
+    # Garante que a listagem está entregando a chave da nova funcionalidade
+    assert dados_resposta[0]["tomado"] is False
+
+
+# === TESTES DA API DE CEP (MANTIDOS E ADAPTADOS PARA A ROTA) ===
+
+@patch("app.requests.get")
+def test_buscar_endereco_por_cep_sucesso(mock_get, client):
+    """
+    Valida se a rota consegue interpretar corretamente o retorno de sucesso da BrasilAPI.
     """
     mock_resposta_api = {
         "cep": "01001000",
@@ -29,23 +89,25 @@ def test_buscar_endereco_por_cep_sucesso():
         "neighborhood": "Sé",
         "street": "Praça da Sé"
     }
+    
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = mock_resposta_api
 
-    with patch('app.requests.get') as mock_get:
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = mock_resposta_api
+    # Faz a requisição direto na rota da sua API Flask
+    resposta = client.get("/cep/01001000")
+    dados_resposta = resposta.get_json()
 
-        resultado = buscar_endereco_por_cep("01001000")
-
-        assert resultado["sucesso"] is True
-        assert resultado["cidade"] == "São Paulo"
-        assert resultado["estado"] == "SP"
-        assert resultado["rua"] == "Praça da Sé"
+    assert resposta.status_code == 200
+    assert dados_resposta["city"] == "São Paulo"
+    assert dados_resposta["state"] == "SP"
+    assert dados_resposta["street"] == "Praça da Sé"
 
 
-def test_buscar_endereco_cep_curto_invalido():
+def test_buscar_endereco_cep_curto_invalido(client):
     """
-    Valida a regra de limite/validação para CEPs com tamanho errado.
+    Valida a regra de validação para CEPs com tamanho errado.
     """
-    resultado = buscar_endereco_por_cep("123")
-    assert resultado["sucesso"] is False
-    assert "erro" in resultado
+    resposta = client.get("/cep/123")
+    dados_resposta = resposta.get_json()
+    
+    assert dados_resposta["erro"] == "CEP inválido"

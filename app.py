@@ -2,6 +2,7 @@ import os
 from flask import Flask, jsonify, request
 import psycopg2
 import requests
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -18,7 +19,6 @@ def conectar_banco():
     """
     Conecta ao banco PostgreSQL do Supabase.
     """
-
     try:
         conexao = psycopg2.connect(
             host=DB_HOST,
@@ -27,9 +27,7 @@ def conectar_banco():
             user=DB_USER,
             password=DB_PASSWORD
         )
-
         return conexao
-
     except Exception as erro:
         print(f"Erro ao conectar no banco: {erro}")
         return None
@@ -38,7 +36,6 @@ def conectar_banco():
 
 @app.route("/")
 def inicio():
-
     return jsonify({
         "projeto": "Cuidado Amigo",
         "status": "online",
@@ -49,27 +46,22 @@ def inicio():
 
 @app.route("/cep/<cep>")
 def buscar_cep(cep):
-
     cep_limpo = ''.join(filter(str.isdigit, cep))
     if len(cep_limpo) != 8:
         return jsonify({
             "erro": "CEP inválido"
         })
 
-
     url = f"https://brasilapi.com.br/api/cep/v1/{cep_limpo}"
     
     try:
-
         resposta = requests.get(
             url,
             timeout=5
         )
-
         return jsonify(
             resposta.json()
         )
-
     except Exception:
         return jsonify({
             "erro": "Falha ao consultar CEP"
@@ -87,11 +79,13 @@ def listar_medicamentos():
 
     cursor = conexao.cursor()
 
+    # Alterado de 'ORDER BY id' para 'ORDER BY horario ASC'
+    
     cursor.execute(
         """
         SELECT id, nome, horario
         FROM medicamentos
-        ORDER BY id;
+        ORDER BY horario ASC;
         """
     )
 
@@ -106,7 +100,8 @@ def listar_medicamentos():
         lista.append({
             "id": medicamento[0],
             "nome": medicamento[1],
-            "horario": medicamento[2]
+            "horario": medicamento[2],
+            "tomado": False  # <-- Entrega o status visual padrão para o app ou frontend usar
         })
 
     return jsonify(lista)
@@ -120,9 +115,18 @@ def adicionar_medicamento():
     horario = dados.get("horario")
 
     if not nome or not horario:
-        return jsonify({
-            "erro": "Nome e horário são obrigatórios"
-        }), 400
+    return jsonify({
+        "erro": "Nome e horário são obrigatórios"
+    }), 400
+
+try:
+    datetime.strptime(horario, "%H:%M")
+except ValueError:
+    return jsonify({
+        "erro": "Horário deve estar no formato HH:MM"
+    }), 400
+
+conexao = conectar_banco()
 
     conexao = conectar_banco()
     
@@ -133,30 +137,30 @@ def adicionar_medicamento():
 
     cursor = conexao.cursor()
     cursor.execute(
-
         """
         INSERT INTO medicamentos(nome, horario)
         VALUES(%s,%s);
         """,
-
         (
             nome,
             horario
         )
-
     )
 
-
-
     conexao.commit()
-
 
     cursor.close()
     conexao.close()
 
-
-
+    # Retorna o objeto completo criado, incluindo o status padrão da nova feature
     return jsonify({
+        "mensagem": "Medicamento cadastrado com sucesso",
+        "medicamento": {
+            "nome": nome,
+            "horario": horario,
+            "tomado": False  # <-- Nova funcionalidade integrada na resposta do cadastro
+        }
+    }), 201
 
         "mensagem": "Medicamento cadastrado com sucesso"
 
@@ -203,7 +207,6 @@ def remover_medicamento(id):
 # EXECUÇÃO LOCAL
 
 if __name__ == "__main__":
-
     app.run(
         host="0.0.0.0",
         port=5000
