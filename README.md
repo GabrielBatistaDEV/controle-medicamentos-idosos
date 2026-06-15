@@ -1,72 +1,84 @@
-# Sistema de Controle de Medicamentos - Cuidado Amigo
+# 🏥 Cuidado Amigo – Sistema de Controle de Medicamentos
 
-🌍 **Status do Deploy (Entrega Intermediária):**
-Esta é uma aplicação de Interface de Linha de Comando (CLI). Ela pode ser executada facilmente na nuvem via **Replit** (importando este repositório diretamente na plataforma) ou executada localmente seguindo as instruções abaixo.
+## Bootcamp II – Desafio Entrega Final
 
-## Visão Geral
-Este projeto é uma aplicação CLI desenvolvida para auxiliar idosos e cuidadores na organização de rotinas de medicação. O foco é mitigar o problema do esquecimento e da confusão de horários, garantindo maior segurança na administração de remédios.
+### Integrantes
 
-## Problema Real e Impacto Social
-Muitos idosos convivem com a polifarmácia (uso de vários medicamentos diários). A dificuldade em memorizar horários pode causar interações medicamentosas perigosas ou falta de tratamento. O Cuidado Amigo oferece uma solução digital simples para listar e organizar esses dados, promovendo autonomia e saúde.
+* Vinícius Martins
+* Gabriel Batista Gomes
+* João Pedro dos Santos
+* Leonardo Ali
+* Beatriz Saboia
 
-## Funcionalidades
-* **Integração com API Pública (Nova):** Busca automática e validação do endereço do paciente/cuidador através do CEP (utilizando a BrasilAPI).
-* **Adicionar Medicamento:** Registro do nome e do horário (HH:MM).
-* **Listar Medicamentos:** Exibição clara de todos os itens cadastrados.
-* **Validação:** Impede o cadastro de campos vazios para evitar erros de registro.
+---
 
-## Tecnologias Utilizadas
-* **Linguagem:** Python 3.10+
-* **Integração:** Biblioteca `requests` para consumo de APIs REST.
-* **Testes:** Pytest e `unittest.mock` (para testes unitários e testes de integração com a API externa).
-* **Linting:** Flake8 (para garantia de qualidade e estilo de código).
-* **CI/CD:** GitHub Actions (automação de testes e validação a cada push).
+# 📌 Visão Geral do Projeto
 
-## Instalação e Execução (Local)
+O **Cuidado Amigo** é uma aplicação desenvolvida para auxiliar idosos e cuidadores no controle de medicamentos.
 
-1. **Clonar o projeto:**
-   ```bash
-   git clone [https://github.com/GabrielBatistaDEV/controle-medicamentos-idosos](https://github.com/GabrielBatistaDEV/controle-medicamentos-idosos)
-   cd controle-medicamentos-idosos
+O objetivo do sistema é facilitar o gerenciamento de horários e informações dos medicamentos, reduzindo riscos relacionados a esquecimento, confusão de horários e administração incorreta.
 
-    Instalar dependências:
-    Bash
+A aplicação foi evoluída de uma versão inicial em linha de comando para uma API web publicada em nuvem, utilizando banco de dados real para persistência das informações.
 
-    pip install -r requirements.txt
+---
 
-    Executar a aplicação:
-    Bash
+# 🎯 Problema e Impacto Social
 
-    python app.py
+Muitos idosos utilizam diversos medicamentos diariamente e podem enfrentar dificuldades para lembrar horários e organizar seus tratamentos.
 
-🧪 Testes e Qualidade de Código
+O Cuidado Amigo busca oferecer uma solução simples para organizar essas informações, proporcionando maior segurança e autonomia para usuários e cuidadores.
 
-Para garantir que o sistema funcione corretamente (incluindo a simulação da API), execute os comandos abaixo na raiz do projeto:
+---
 
-Rodar Testes Automatizados (Unitários e de Integração):
-Bash
+# 🚀 Funcionalidades
 
-pytest
+## Funcionalidades iniciais
 
-Rodar Análise Estática (Lint):
-Bash
+* Cadastro de medicamentos.
+* Registro do nome do medicamento.
+* Registro do horário de utilização.
+* Listagem dos medicamentos cadastrados.
+* Validação de informações obrigatórias.
+* Consulta de endereço através do CEP utilizando a BrasilAPI.
 
-flake8 .
+---
 
-⚙️ Integração Contínua (CI)
+## Funcionalidades implementadas na entrega final
 
-O projeto utiliza GitHub Actions para validar automaticamente cada alteração. O workflow executa:
+* Migração da aplicação para uma API utilizando Flask.
+* Integração com banco de dados PostgreSQL hospedado no Supabase.
+* Persistência real dos medicamentos cadastrados.
+* Consulta e retorno dos medicamentos armazenados no banco.
+* Deploy da aplicação utilizando Render.
+* Configuração de ambiente para execução em nuvem.
+* Manutenção dos testes automatizados.
+* Integração com GitHub Actions para validação do projeto.
 
-    Instalação de dependências.
+---
 
-    Verificação de estilo (Linting).
+# 🛠️ Tecnologias Utilizadas
 
-    Execução dos testes automatizados isolados.
+* Python
+* Flask
+* PostgreSQL
+* Supabase
+* Render
+* GitHub Actions
+* BrasilAPI
+* Pytest
 
-📌 Informações Adicionais
+---
 
-    Versão: 1.1.0
+# 🌐 Links
 
-    Autores: Gabriel Batista Gomes, Leonardo Ali Yousef
+## Repositório GitHub
 
     Licença: MIT
+
+    ---
+
+## Integrantes
+- Beatriz Saboia
+
+## Atualização realizada
+- Atualização da documentação do projeto para entrega final.
