@@ -79,11 +79,13 @@ def listar_medicamentos():
 
     cursor = conexao.cursor()
 
+    # Alterado de 'ORDER BY id' para 'ORDER BY horario ASC'
+    
     cursor.execute(
         """
         SELECT id, nome, horario
         FROM medicamentos
-        ORDER BY id;
+        ORDER BY horario ASC;
         """
     )
 
