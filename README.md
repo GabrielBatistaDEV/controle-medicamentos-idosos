@@ -73,58 +73,12 @@ O Cuidado Amigo busca oferecer uma solução simples para organizar essas inform
 
 ## Repositório GitHub
 
-https://github.com/GabrielBatistaDEV/controle-medicamentos-idosos
+    Licença: MIT
 
-## Aplicação Publicada
+    ---
 
-https://controle-medicamentos-idosos.onrender.com
+## Integrantes
+- Beatriz Saboia
 
----
-
-# 🗄️ Banco de Dados
-
-A aplicação utiliza PostgreSQL através do Supabase.
-
-Tabela principal:
-
-### medicamentos
-
-| Campo   | Tipo   |
-| ------- | ------ |
-| id      | SERIAL |
-| nome    | TEXT   |
-| horario | TEXT   |
-
----
-
-# ▶️ Como executar localmente
-
-Clonar o repositório:
-
-```bash
-git clone https://github.com/GabrielBatistaDEV/controle-medicamentos-idosos
-```
-
-Instalar dependências:
-
-```bash
-pip install -r requirements.txt
-```
-
-Executar aplicação:
-
-```bash
-python app.py
-```
-
----
-
-# 👥 Trabalho Colaborativo
-
-O desenvolvimento foi realizado utilizando GitHub com divisão de tarefas, branches, commits e Pull Requests revisados pelos integrantes da equipe.
-
-Cada integrante realizou contribuições no projeto através do histórico do GitHub.
-
-## Atualização da entrega final
-
-Projeto atualizado com deploy em nuvem utilizando Render e banco PostgreSQL via Supabase.
+## Atualização realizada
+- Atualização da documentação do projeto para entrega final.
